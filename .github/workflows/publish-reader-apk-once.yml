@@ -1,0 +1,28 @@
+name: Publish WorshipReader APK Once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-reader-apk-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reconstruct updated APK
+        run: |
+          curl -L --fail --retry 3 'https://github.com/girjin2/churchstudiokr/releases/download/worship-reader-android/WorshipReader-Android.apk' -o old.apk
+          echo 'f261a7e344a30b36190d805d59920f7b6acd1cae05a08d4fbd4b06f52fd277fe  old.apk' | sha256sum -c -
+          zstd -d --patch-from=old.apk patches/reader.patch.zst -o WorshipReader-Android.apk
+          echo '3aa22fb41ee124a44851c4b71f58156ad7fcb0d79a5d8bba2b05305d93e93738  WorshipReader-Android.apk' | sha256sum -c -
+      - name: Replace public release APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload worship-reader-android WorshipReader-Android.apk --clobber
