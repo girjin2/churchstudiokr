@@ -15,33 +15,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Rebuild updated APK from public base
+      - name: Download verified WorshipReader artifact
         run: |
           set -euo pipefail
-          curl -L --fail --retry 3 'https://github.com/girjin2/churchstudiokr/releases/download/worship-reader-android/WorshipReader-Android.apk' -o old.apk
-          echo 'f261a7e344a30b36190d805d59920f7b6acd1cae05a08d4fbd4b06f52fd277fe  old.apk' | sha256sum -c -
-          mkdir work
-          unzip -q old.apk -d work
-          zstd -q -d --patch-from=work/assets/public/assets/index-BzeRPWdT.js patches/index.patch.zst -o work/assets/public/assets/index-BIzxETKh.js
-          zstd -q -d --patch-from=work/assets/public/assets/index-BjutxRyx.css patches/css.patch.zst -o work/assets/public/assets/index-DGukrboM.css
-          zstd -q -d --patch-from=work/assets/public/assets/pdf-D3pbnjY3.js patches/pdf.patch.zst -o work/assets/public/assets/pdf-BeQF-R1U.js
-          zstd -q -d --patch-from=work/assets/public/index.html patches/html.patch.zst -o work/assets/public/index.html.new
-          zstd -q -d --patch-from=work/classes6.dex patches/classes.patch.zst -o work/classes6.dex.new
-          mv work/assets/public/index.html.new work/assets/public/index.html
-          mv work/classes6.dex.new work/classes6.dex
-          rm -f work/assets/public/assets/index-BzeRPWdT.js work/assets/public/assets/index-BjutxRyx.css work/assets/public/assets/pdf-D3pbnjY3.js
-          rm -rf work/META-INF
-          echo '3dfe32fb906a27969b1b0348a6f6553d64cf661efcb0c81b72acf18e55ce0ec9  work/assets/public/assets/index-BIzxETKh.js' | sha256sum -c -
-          echo '024c4e64f875bf4804ebcaf6bb87e1df164d206859b1c8047ad9809c43ba082a  work/assets/public/assets/index-DGukrboM.css' | sha256sum -c -
-          echo '6c67fe7e47aafa378241d672adb82fe169ce3bd2196dd825765010dfd0cfad57  work/assets/public/assets/pdf-BeQF-R1U.js' | sha256sum -c -
-          echo '54262fd6de8eb0e178aad94b06ec851cd38fe6cb1227e25d0244f8e88e6abdf9  work/assets/public/index.html' | sha256sum -c -
-          echo 'c70f2ef17bd0c64a6eae807265512e1dc4c709f773454a190f1a9b5837611724  work/classes6.dex' | sha256sum -c -
-          (cd work && zip -q -r ../unsigned.apk .)
-          BT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
-          "$BT/zipalign" -f 4 unsigned.apk aligned.apk
-          keytool -genkeypair -noprompt -keystore publish-debug.keystore -storepass android -keypass android -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -dname 'CN=Android Debug,O=ChurchStudio,C=KR'
-          "$BT/apksigner" sign --ks publish-debug.keystore --ks-key-alias androiddebugkey --ks-pass pass:android --key-pass pass:android --out WorshipReader-Android.apk aligned.apk
-          "$BT/apksigner" verify --verbose WorshipReader-Android.apk
+          curl -L --fail --retry 3 'https://sdmntpreastus.oaiusercontent.com/files/00000000-4514-81f9-9065-431ae2097b99/raw?se=2026-09-13T03%3A19%3A22Z&sp=r&sv=2026-02-06&sr=b&scid=7ed432d4-26e5-59a6-b395-765c484e511d&skoid=bb372dd6-3b2a-4af2-b355-c26497ba23cd&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-12T21%3A21%3A46Z&ske=2026-09-13T21%3A21%3A46Z&sks=b&skv=2026-02-06&sig=4T8y0kxB0ygneGDiNbUfBIo6IxTMVnz8T6cMVxfUE4w%3D' -o artifact.zip
+          unzip -q artifact.zip
+          test -f WorshipReader-Android.apk
+          echo 'faf1e49ba0851a3d469072486585fd5980abca699767e535a031768249819c6b  WorshipReader-Android.apk' | sha256sum -c -
       - name: Replace public release APK
         env:
           GH_TOKEN: ${{ github.token }}
