@@ -1,0 +1,23 @@
+name: Publish WorshipReader AI Sermon APK
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-worshipreader-ai-temp.yml'
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download verified Android artifact
+        run: |
+          curl -fL 'https://sdmntpraustraliaeast.oaiusercontent.com/files/00000000-9c6c-81fa-9ae3-27896ad896c5/raw?se=2026-09-16T02%3A04%3A34Z&sp=r&sv=2026-02-06&sr=b&scid=1a85ed83-c45a-52e3-a7ca-47aa79ca8277&skoid=f5e14fda-2af7-44a3-9d18-d372ffcad871&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-15T23%3A48%3A58Z&ske=2026-09-16T23%3A48%3A58Z&sks=b&skv=2026-02-06&sig=J65DUYwCZ1ZiuBO/QH/%2B4hUOXBvATXoLjbnRR5qb1zw%3D' -o artifact.zip
+          unzip -q artifact.zip
+          test "$(sha256sum WorshipReader-Android.apk | awk '{print $1}')" = "a527ee6215512ea6f59433418b2ce61104ca7019369e4364edc2d3e4a48ef5a3"
+          test "$(stat -c%s WorshipReader-Android.apk)" = "4877113"
+      - name: Replace stable release APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload worship-reader-android WorshipReader-Android.apk --clobber --repo girjin2/churchstudiokr
+          gh release view worship-reader-android --repo girjin2/churchstudiokr --json assets
