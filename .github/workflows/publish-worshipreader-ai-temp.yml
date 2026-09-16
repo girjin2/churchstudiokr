@@ -1,4 +1,4 @@
-name: Publish WorshipReader Sermon UI APK
+name: Publish WorshipReader Sermon Paste APK
 on:
   push:
     paths:
@@ -11,10 +11,10 @@ jobs:
     steps:
       - name: Download verified Android artifact
         run: |
-          curl -fL 'https://sdmntprnorthcentralus.oaiusercontent.com/files/00000000-2c58-822f-b8a5-43ff6f9c6a3e/raw?se=2026-09-16T09%3A29%3A06Z&sp=r&sv=2026-02-06&sr=b&scid=c437b336-7460-51a4-baab-ef0cb5918012&skoid=bb372dd6-3b2a-4af2-b355-c26497ba23cd&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-15T23%3A04%3A32Z&ske=2026-09-16T23%3A04%3A32Z&sks=b&skv=2026-02-06&sig=WhoyorMUJeLEQqvwC721IaPLrwkag1xwtHM8kythiCw%3D' -o artifact.zip
+          curl -fL 'https://sdmntprcentralus.oaiusercontent.com/files/00000000-9e00-81f5-98a8-f8d411161258/raw?se=2026-09-16T10%3A07%3A26Z&sp=r&sv=2026-02-06&sr=b&scid=bf614df3-1dd4-5bfa-81d8-db9403219764&skoid=bb372dd6-3b2a-4af2-b355-c26497ba23cd&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-16T01%3A42%3A53Z&ske=2026-09-17T01%3A42%3A53Z&sks=b&skv=2026-02-06&sig=p7lPPFbevcl01N546Y2IQx8KcPNOkFRHhoxB2ssLnvM%3D' -o artifact.zip
           unzip -q artifact.zip
-          test "$(sha256sum WorshipReader-Android.apk | awk '{print $1}')" = "4805f1845e2e1930759e39c7753aafd650d58b1c5643f1baf018e2eaddcc6df4"
-          test "$(stat -c%s WorshipReader-Android.apk)" = "4878993"
+          test "$(sha256sum WorshipReader-Android.apk | awk '{print $1}')" = "1200f3ea887703145040ce3db18b048851460eae90a7f218990371b1bb02bdad"
+          test "$(stat -c%s WorshipReader-Android.apk)" = "4878985"
       - name: Replace stable release APK
         env:
           GH_TOKEN: ${{ github.token }}
