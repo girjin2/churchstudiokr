@@ -5,17 +5,6 @@ import { supabase } from '../lib/supabase';
 
 const READER_APK_URL='https://github.com/girjin2/churchstudiokr/releases/download/worship-reader-android/WorshipReader-Android.apk';
 
-function parseGitHubReleaseUrl(url='') {
-  const m = url.match(/^https:\/\/github\.com\/([^/]+)\/([^/]+)\/releases\/download\/([^/]+)\/(.+)$/i);
-  if (!m) return null;
-  return {
-    owner: m[1],
-    repo: m[2],
-    tag: decodeURIComponent(m[3]),
-    assetName: decodeURIComponent(m[4])
-  };
-}
-
 function noticeDate(value){
   if(!value) return '';
   try{
@@ -27,8 +16,6 @@ function noticeDate(value){
 
 export default function Home() {
   const [latest,setLatest]=useState(null);
-  const [downloadCount,setDownloadCount]=useState(null);
-  const [downloadBase,setDownloadBase]=useState(0);
   const [notices,setNotices]=useState([]);
 
   useEffect(()=>{
@@ -47,39 +34,12 @@ export default function Home() {
         .eq('is_published',true)
         .order('is_pinned',{ascending:false})
         .order('published_at',{ascending:false})
-        .limit(10),
-      supabase
-        .from('site_settings')
-        .select('value')
-        .eq('key','download_count_base')
-        .maybeSingle()
-    ]).then(([releaseResult,noticeResult,baseResult])=>{
+        .limit(10)
+    ]).then(([releaseResult,noticeResult])=>{
       setLatest(releaseResult.data||null);
       setNotices(noticeResult.data||[]);
-      const base=Number.parseInt(baseResult.data?.value||'0',10);
-      setDownloadBase(Number.isFinite(base)?base:0);
     });
   },[]);
-
-  useEffect(()=>{
-    async function loadDownloadCount(){
-      setDownloadCount(null);
-      const parsed=parseGitHubReleaseUrl(latest?.download_url||'');
-      if(!parsed) return;
-      try{
-        const res=await fetch(`https://api.github.com/repos/${encodeURIComponent(parsed.owner)}/${encodeURIComponent(parsed.repo)}/releases/tags/${encodeURIComponent(parsed.tag)}`,{
-          headers:{Accept:'application/vnd.github+json'}
-        });
-        if(!res.ok) return;
-        const data=await res.json();
-        const asset=(data.assets||[]).find(a=>a.name===parsed.assetName) || (data.assets||[]).find(a=>a.browser_download_url===latest.download_url);
-        if(asset && typeof asset.download_count==='number') setDownloadCount(asset.download_count);
-      }catch{}
-    }
-    loadDownloadCount();
-  },[latest]);
-
-  const cumulativeDownloadCount=downloadCount===null?null:downloadBase+downloadCount;
 
   return (
     <main>
@@ -132,10 +92,7 @@ export default function Home() {
             <b>{latest?`${latest.version} · ${latest.title}`:'최신 버전 준비 중'}</b>
             <p className="muted">{latest?.summary||'배포 가능한 ChurchStudio가 확정되면 공식 다운로드가 활성화됩니다.'}</p>
             {latest?.file_name&&<p className="muted">{latest.file_name}{latest.file_size_text?` · ${latest.file_size_text}`:''}</p>}
-            {latest?.download_url&&<>
-              <a className="btn" href={latest.download_url}>ChurchStudio 다운로드</a>
-              <p className="muted" style={{marginTop:12,fontSize:14}}>누적 다운로드 {cumulativeDownloadCount===null?'확인 중':`${cumulativeDownloadCount.toLocaleString()}회`}</p>
-            </>}
+            {latest?.download_url&&<a className="btn" href={latest.download_url}>ChurchStudio 다운로드</a>}
           </div>
 
           <div className="card" style={{marginTop:16}}>
