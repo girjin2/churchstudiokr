@@ -1,0 +1,56 @@
+name: Phone Camera Phase 1 Build
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'phone-camera-phase1/**'
+      - '.github/workflows/phone-camera-phase1.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: phone-camera-phase1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android platform
+        run: sdkmanager 'platforms;android-37' 'build-tools;36.0.0'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.5.0'
+
+      - name: Build debug APK
+        run: gradle --no-daemon assembleDebug
+
+      - name: Generate Gradle wrapper
+        run: gradle --no-daemon wrapper --gradle-version 9.5.0
+
+      - name: Package outputs
+        run: |
+          mkdir -p artifact
+          cp app/build/outputs/apk/debug/app-debug.apk artifact/ChurchStudioPhoneCamera-Phase1-debug.apk
+          zip -r artifact/ChurchStudioPhoneCamera_Phase1_project.zip . \
+            -x 'artifact/*' '.gradle/*' 'app/build/*'
+
+      - name: Upload Phase 1 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ChurchStudioPhoneCamera-Phase1
+          path: phone-camera-phase1/artifact/*
+          if-no-files-found: error

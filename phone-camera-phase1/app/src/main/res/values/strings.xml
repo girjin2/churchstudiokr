@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ChurchStudio Phone Camera</string>
+    <string name="camera_preview">카메라 미리보기</string>
+    <string name="camera_permission_needed">카메라 권한이 필요합니다.</string>
+    <string name="camera_starting">후면 카메라 준비 중</string>
+    <string name="camera_ready">후면 카메라 준비됨</string>
+    <string name="camera_error">후면 카메라를 시작할 수 없습니다.</string>
+    <string name="zoom_label">1.0x</string>
+    <string name="zoom_range_unknown">줌 범위</string>
+    <string name="reset_zoom">1x</string>
+    <string name="phase_label">Phase 1</string>
+</resources>
