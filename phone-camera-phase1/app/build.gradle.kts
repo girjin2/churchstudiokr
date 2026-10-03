@@ -22,7 +22,7 @@ android {
 
 dependencies {
     implementation("androidx.appcompat:appcompat:1.8.0")
-    implementation("androidx.core:core:1.19.1")
+    implementation("androidx.core:core:1.17.0")
     implementation("androidx.activity:activity:1.13.0")
 
     val cameraxVersion = "1.6.2"
