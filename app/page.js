@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 
 const READER_APK_URL='https://github.com/girjin2/churchstudiokr/releases/download/worship-reader-android/WorshipReader-Android.apk';
 const PHONE_CAMERA_APK_URL='https://github.com/girjin2/churchstudiokr/releases/download/public-beta-1/ChurchStudioPhoneCamera-V3_8_7-debug.apk';
+const IPHONE_CAMERA_SOURCE_URL='https://github.com/girjin2/phone-camera-ios/archive/refs/heads/main.zip';
 
 function noticeDate(value){
   if(!value) return '';
@@ -105,9 +106,9 @@ export default function Home() {
 
           <div className="card" style={{marginTop:16}}>
             <b>ChurchStudio 휴대폰 카메라 · iPhone 앱</b>
-            <p className="muted">iPhone 카메라를 USB로 ChurchStudio에 연결해서 예배 방송 카메라로 사용하는 전용 앱입니다.</p>
-            <p className="muted">iPhone · TestFlight 설치본 준비 중</p>
-            <span className="btn" style={{opacity:.55,cursor:'not-allowed'}}>iPhone 앱 준비 중</span>
+            <p className="muted">iPhone 카메라를 USB로 ChurchStudio에 연결해서 예배 방송 카메라로 사용하는 전용 앱의 전체 소스입니다.</p>
+            <p className="muted">Mac에서 Xcode로 열어 빌드할 수 있는 전체 파일 · ZIP</p>
+            <a className="btn" href={IPHONE_CAMERA_SOURCE_URL}>iPhone 앱 전체 파일 다운로드</a>
           </div>
 
           <div className="card" style={{marginTop:16}}>
