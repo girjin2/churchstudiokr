@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 
 const READER_APK_URL='https://github.com/girjin2/churchstudiokr/releases/download/worship-reader-android/WorshipReader-Android.apk';
+const PHONE_CAMERA_APK_URL='https://github.com/girjin2/churchstudiokr/releases/download/public-beta-1/ChurchStudioPhoneCamera-V3_8_7-debug.apk';
 
 function noticeDate(value){
   if(!value) return '';
@@ -99,7 +100,7 @@ export default function Home() {
             <b>ChurchStudio 휴대폰 카메라 · Android 앱</b>
             <p className="muted">Android 휴대폰 카메라를 USB로 ChurchStudio에 연결해서 예배 방송 카메라로 사용하는 전용 앱입니다.</p>
             <p className="muted">ChurchStudioPhoneCamera-V3_8_7-debug.apk · Android 테스트 설치본</p>
-            <span className="btn" style={{opacity:.55,cursor:'default'}}>APK 업로드 준비 중</span>
+            <a className="btn" href={PHONE_CAMERA_APK_URL}>휴대폰 카메라 APK 다운로드</a>
           </div>
 
           <div className="card" style={{marginTop:16}}>
