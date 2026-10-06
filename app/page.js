@@ -104,6 +104,13 @@ export default function Home() {
           </div>
 
           <div className="card" style={{marginTop:16}}>
+            <b>ChurchStudio 휴대폰 카메라 · iPhone 앱</b>
+            <p className="muted">iPhone 카메라를 USB로 ChurchStudio에 연결해서 예배 방송 카메라로 사용하는 전용 앱입니다.</p>
+            <p className="muted">iPhone · TestFlight 설치본 준비 중</p>
+            <span className="btn" style={{opacity:.55,cursor:'not-allowed'}}>iPhone 앱 준비 중</span>
+          </div>
+
+          <div className="card" style={{marginTop:16}}>
             <b>예배 리더 · Android 설치본</b>
             <p className="muted">갤럭시탭과 Android 기기에 설치해서 사용하는 독립 예배 리더입니다. HWP, HWPX, DOCX, PPT, PPTX, PDF, TXT를 지원하며 파일은 서버에 올리지 않고 기기 안에서 처리합니다.</p>
             <p className="muted">WorshipReader-Android.apk · 약 4.6 MB · Android 테스트 설치본</p>
