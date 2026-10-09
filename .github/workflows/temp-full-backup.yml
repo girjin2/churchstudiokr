@@ -1,0 +1,31 @@
+name: Temporary Full Backup
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-full-backup.yml'
+permissions:
+  contents: read
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Collect repository and release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          mkdir -p backup/github/repository backup/github/releases
+          rsync -a --exclude='.git' --exclude='backup' ./ backup/github/repository/
+          gh release download public-beta-1 --dir backup/github/releases/public-beta-1
+          gh release download worship-reader-android --dir backup/github/releases/worship-reader-android
+          git bundle create backup/github/churchstudiokr-main.bundle --all
+          git log --all --decorate --oneline > backup/github/git-history.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: churchstudio-github-backup
+          path: backup
+          compression-level: 0
+          retention-days: 7
