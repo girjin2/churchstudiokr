@@ -1,0 +1,75 @@
+name: Publish WorshipReader PPT Layout Fix
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-reader-ppt-layout-fix.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reassemble verified APK from 19 staged chunks
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p publish
+          chunk_shas=(
+            f69be904b4d41324b80ed5f021843f4bf80f3de4
+            7ef889508aa9e5c2515378263f1738de1785b793
+            92be9bea1e3c84994dbec06f82721fe58cf20541
+            651677212903a9d8890ea3a0ea9e6e2305e9a1df
+            4a8242defff09c75d78e397cc5913e886cf8a145
+            b76c8bdfcbb814b5d884c8dc9b38f5aa5169ae49
+            a52a5699a8b0c0e9ebb7fb858e5fee48474f88d6
+            08e5b5f6fb5d322e0c7e1ebf07a5c5cc11b09f5c
+            9905eb6fdef143e9c9078588edb1ebc125bc2cad
+            1152e844785d247f2c548a3c86d9ff261cec3790
+            a1b5a0e748325cffb46f3e3cee036151685bd8b2
+            7b9f7706063b5c66195b0f2098bead28d680537b
+            a33d663cb1f4f1278e8f5ac0f19c7afca9c8e449
+            45388e48405b0bec8725061dc99674a1b86bb772
+            30deaa43e610c1b5e3f8747ef916b0fa98a21de4
+            efd41bdffb36f10530a4894b5a24358b2be35aab
+            159ba5cd914a45cccb60229c011d9c8df64532d0
+            7574865ecff7073b5bc632901406a0874eb8995e
+            bbeb51e7970350504d21f363c8e018bf7bff82e9
+          )
+          for i in "${!chunk_shas[@]}"; do
+            blob="${chunk_shas[$i]}"
+            part="$(printf 'publish/chunk%03d' "$i")"
+            gh api "repos/$GITHUB_REPOSITORY/git/blobs/$blob" --jq '.content' |
+              base64 --decode | base64 --decode > "$part"
+            if [ "$i" -lt 18 ]; then
+              test "$(stat -c%s "$part")" -eq 262144
+            else
+              test "$(stat -c%s "$part")" -eq 161505
+            fi
+            test "$(base64 -w0 "$part" | git hash-object --stdin)" = "$blob"
+          done
+          cat publish/chunk??? > publish/WorshipReader-Android.apk
+          test "$(stat -c%s publish/WorshipReader-Android.apk)" -eq 4880097
+          echo 'ffa93a67520f640aa91026fb0cf49c4cabf245b03b655a75f228d547131fa1c2  publish/WorshipReader-Android.apk' | sha256sum -c -
+          unzip -tq publish/WorshipReader-Android.apk | tail -1
+          (cd publish && sha256sum WorshipReader-Android.apk > SHA256SUMS.txt)
+      - name: Publish fixed APK release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag='worshipreader-ppt-layout-fix-20261022'
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$tag" publish/WorshipReader-Android.apk publish/SHA256SUMS.txt --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$tag" publish/WorshipReader-Android.apk publish/SHA256SUMS.txt \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" \
+              --title 'WorshipReader Android - PPT layout fix (2026-10-22)' \
+              --notes 'Built from girjin2/ChurchStudioreader commit cb275a35081793ed62e95d7d7c062cdada3fc1f0. Fixes PPTX table geometry, text-box fitting, legacy PPT coordinate scaling; adds PPT text view. Automated tests and APK ZIP integrity passed. Physical device and original user file still require validation. SHA-256: ffa93a67520f640aa91026fb0cf49c4cabf245b03b655a75f228d547131fa1c2.'
+          fi
+          gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json url,assets
