@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 
-const READER_APK_URL='https://github.com/girjin2/churchstudiokr/releases/download/worshipreader-ppt-layout-fix-20261022/WorshipReader-Android.apk';
+const READER_APK_URL='https://github.com/girjin2/churchstudiokr/releases/download/worshipreader-size-controls-20261022/WorshipReader-Android.apk';
 const PHONE_CAMERA_APK_URL='https://github.com/girjin2/churchstudiokr/releases/download/public-beta-1/ChurchStudioPhoneCamera-V3_8_7-debug.apk';
 const IPHONE_CAMERA_SOURCE_URL='https://github.com/girjin2/phone-camera-ios/archive/refs/heads/main.zip';
 
@@ -137,7 +137,7 @@ export default function Home() {
           <div className="card" style={{marginTop:16}}>
             <b>예배 리더 · Android 설치본</b>
             <p className="muted">갤럭시탭과 Android 기기에 설치해서 사용하는 독립 예배 리더입니다. HWP, HWPX, DOCX, PPT, PPTX, PDF, TXT를 지원하며 파일은 서버에 올리지 않고 기기 안에서 처리합니다.</p>
-            <p className="muted">WorshipReader-Android.apk · 2026-10-22 PPT 글자 겹침 수정 시험본 (약 4.88MB)</p>
+            <p className="muted">WorshipReader-Android.apk · 2026-10-22 PPT 글자 크기·화면 확대 조절 시험본 (약 4.88MB)</p>
             <a className="btn" href={READER_APK_URL}>예배 리더 APK 다운로드</a>
           </div>
         </div>
