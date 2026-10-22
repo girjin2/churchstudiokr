@@ -1,0 +1,76 @@
+name: Publish Verified Reassembled WorshipReader APK
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-reader-reassembled-20261022.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Restore and verify all 19 staged APK chunks
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p publish
+          chunk_shas=(
+            f69be904b4d41324b80ed5f021843f4bf80f3de4
+            7ef889508aa9e5c2515378263f1738de1785b793
+            92be9bea1e3c84994dbec06f82721fe58cf20541
+            651677212903a9d8890ea3a0ea9e6e2305e9a1df
+            4a8242defff09c75d78e397cc5913e886cf8a145
+            b76c8bdfcbb814b5d884c8dc9b38f5aa5169ae49
+            a52a5699a8b0c0e9ebb7fb858e5fee48474f88d6
+            08e5b5f6fb5d322e0c7e1ebf07a5c5cc11b09f5c
+            9905eb6fdef143e9c9078588edb1ebc125bc2cad
+            1152e844785d247f2c548a3c86d9ff261cec3790
+            a1b5a0e748325cffb46f3e3cee036151685bd8b2
+            7b9f7706063b5c66195b0f2098bead28d680537b
+            8a83e404a6d9705a6fadc31d4db3e3205fc51c19
+            2402ffc792601e6d0519015ff4356c1b514bec28
+            7d67c3e906a323db40c63464050477522d3da3bd
+            b0f30d70983ae7b0ff8c2d9f22cd54823c2b8d6d
+            5472ea2e2be6fa21f68a66d0aee2a1c58256c8dd
+            7d5b4241ed743abd134c665188c66704e1253791
+            0bbb185305381e0377d14219182f98ac75c6ee7c
+          )
+          for i in "${!chunk_shas[@]}"; do
+            blob="${chunk_shas[$i]}"
+            part="$(printf 'publish/chunk%03d' "$i")"
+            gh api "repos/$GITHUB_REPOSITORY/git/blobs/$blob" --jq '.content' |
+              base64 --decode | base64 --decode > "$part"
+            if [ "$i" -lt 18 ]; then
+              test "$(stat -c%s "$part")" -eq 262144
+            else
+              test "$(stat -c%s "$part")" -eq 160461
+            fi
+            # Check the exact staged Git blob contents, not only the output length.
+            test "$(base64 -w0 "$part" | git hash-object --stdin)" = "$blob"
+          done
+          cat publish/chunk??? > publish/WorshipReader-Android.apk
+          test "$(stat -c%s publish/WorshipReader-Android.apk)" -eq 4879053
+          echo 'a00dabfdae08fb47d4a17b734a2f692b2c16e594aa10f774a6633b2642a96ea0  publish/WorshipReader-Android.apk' | sha256sum -c -
+          unzip -tq publish/WorshipReader-Android.apk | tail -1
+          (cd publish && sha256sum WorshipReader-Android.apk > SHA256SUMS.txt)
+      - name: Publish one installable APK to public release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag='worshipreader-android-20261022-reassembled'
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$tag" publish/WorshipReader-Android.apk publish/SHA256SUMS.txt --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$tag" publish/WorshipReader-Android.apk publish/SHA256SUMS.txt \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" \
+              --title 'WorshipReader Android - Verified Reassembled APK (2026-10-22)' \
+              --notes 'Single Android debug APK reassembled from 19 verified chunks from girjin2/ChurchStudioreader. SHA-256: a00dabfdae08fb47d4a17b734a2f692b2c16e594aa10f774a6633b2642a96ea0. Does not modify ChurchStudio or any user data.'
+          fi
+          gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json url,assets
