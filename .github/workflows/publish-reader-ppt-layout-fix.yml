@@ -1,4 +1,4 @@
-name: Publish WorshipReader PPT Layout Fix
+name: Publish WorshipReader Size Controls
 on:
   push:
     branches: [main]
@@ -31,13 +31,13 @@ jobs:
             1152e844785d247f2c548a3c86d9ff261cec3790
             a1b5a0e748325cffb46f3e3cee036151685bd8b2
             7b9f7706063b5c66195b0f2098bead28d680537b
-            a33d663cb1f4f1278e8f5ac0f19c7afca9c8e449
-            45388e48405b0bec8725061dc99674a1b86bb772
-            30deaa43e610c1b5e3f8747ef916b0fa98a21de4
-            efd41bdffb36f10530a4894b5a24358b2be35aab
-            159ba5cd914a45cccb60229c011d9c8df64532d0
-            7574865ecff7073b5bc632901406a0874eb8995e
-            bbeb51e7970350504d21f363c8e018bf7bff82e9
+            d0f1d0221f545bd829e638c93a9bb57ef1893d7c
+            43e01a7c66a7b9cdb295ec6a356fc47c7ba34c94
+            fe9cf9688d988e6014c1494c0ec02574e5b24312
+            2f95ae0a5148843427302a8deac92347a1e6e88b
+            533ff7bd0bf0c7a161b0755d7e42588a327539e7
+            a18d516076f2615e8da0aa1f5d1086a8936acb03
+            10603087c686b6677ed7a3840e8e53001456f01b
           )
           for i in "${!chunk_shas[@]}"; do
             blob="${chunk_shas[$i]}"
@@ -47,13 +47,13 @@ jobs:
             if [ "$i" -lt 18 ]; then
               test "$(stat -c%s "$part")" -eq 262144
             else
-              test "$(stat -c%s "$part")" -eq 161505
+              test "$(stat -c%s "$part")" -eq 162293
             fi
             test "$(base64 -w0 "$part" | git hash-object --stdin)" = "$blob"
           done
           cat publish/chunk??? > publish/WorshipReader-Android.apk
-          test "$(stat -c%s publish/WorshipReader-Android.apk)" -eq 4880097
-          echo 'ffa93a67520f640aa91026fb0cf49c4cabf245b03b655a75f228d547131fa1c2  publish/WorshipReader-Android.apk' | sha256sum -c -
+          test "$(stat -c%s publish/WorshipReader-Android.apk)" -eq 4880885
+          echo 'ad489dec8141630ab8fa537f74bd584522ff7548e1a1874c0b2991f63b65aebf  publish/WorshipReader-Android.apk' | sha256sum -c -
           unzip -tq publish/WorshipReader-Android.apk | tail -1
           (cd publish && sha256sum WorshipReader-Android.apk > SHA256SUMS.txt)
       - name: Publish fixed APK release
@@ -62,14 +62,14 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          tag='worshipreader-ppt-layout-fix-20261022'
+          tag='worshipreader-size-controls-20261022'
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release upload "$tag" publish/WorshipReader-Android.apk publish/SHA256SUMS.txt --clobber --repo "$GITHUB_REPOSITORY"
           else
             gh release create "$tag" publish/WorshipReader-Android.apk publish/SHA256SUMS.txt \
               --repo "$GITHUB_REPOSITORY" \
               --target "$GITHUB_SHA" \
-              --title 'WorshipReader Android - PPT layout fix (2026-10-22)' \
-              --notes 'Built from girjin2/ChurchStudioreader commit cb275a35081793ed62e95d7d7c062cdada3fc1f0. Fixes PPTX table geometry, text-box fitting, legacy PPT coordinate scaling; adds PPT text view. Automated tests and APK ZIP integrity passed. Physical device and original user file still require validation. SHA-256: ffa93a67520f640aa91026fb0cf49c4cabf245b03b655a75f228d547131fa1c2.'
+              --title 'WorshipReader Android - PPT text size & zoom controls (2026-10-22)' \
+              --notes 'Built from girjin2/ChurchStudioreader commit afe87d92b2c19b1ff0aaf546bb7d94442c26ff35. Adds always-visible font-size controls (16-80px) in PPT text view and 75-300% zoom for original slides, plus reset and mobile scrolling. Retains prior PPT layout fixes. Automated tests and APK ZIP integrity passed. Physical device and original user file still require validation. SHA-256: ad489dec8141630ab8fa537f74bd584522ff7548e1a1874c0b2991f63b65aebf.'
           fi
           gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json url,assets
