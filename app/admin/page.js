@@ -153,7 +153,10 @@ export default function AdminPage(){
   return <main style={box}>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:12,marginBottom:24}}>
       <div><a href="/" style={{textDecoration:'none',color:'#475569'}}>← 홈페이지</a><h1 style={{margin:'8px 0 0'}}>관리자</h1></div>
-      <button style={lightBtn} onClick={()=>supabase.auth.signOut()}>로그아웃</button>
+      <div style={{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}>
+        <a href="/admin/payments" style={{...btn,textDecoration:'none'}}>입금 확인 · 라이선스 발급</a>
+        <button style={lightBtn} onClick={()=>supabase.auth.signOut()}>로그아웃</button>
+      </div>
     </div>
     {message&&<p style={{color:message.includes('완료')?'#047857':'#b91c1c',fontWeight:700}}>{message}</p>}
 
