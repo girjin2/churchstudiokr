@@ -103,7 +103,10 @@ export default function FeedbackPage(){
   return <main style={box}>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:12,flexWrap:'wrap',marginBottom:24}}>
       <div><a href="/" style={{color:'#aeb9d2',textDecoration:'none'}}>← ChurchStudio 홈페이지</a><h1 style={{margin:'8px 0 0'}}>사용자 의견 게시판</h1></div>
-      <button style={ghost} onClick={()=>supabase.auth.signOut()}>로그아웃</button>
+      <div style={{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}>
+        <a href="/license" style={{...ghost,textDecoration:'none'}}>내 라이선스 키 확인</a>
+        <button style={ghost} onClick={()=>supabase.auth.signOut()}>로그아웃</button>
+      </div>
     </div>
     <div style={{...card,borderColor:'#5b5135'}}>
       <b>비밀 게시판</b>
