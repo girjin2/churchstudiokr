@@ -145,7 +145,7 @@ Deno.serve(async (req: Request) => {
     if (!validUuid(body.id) && ["approve","reject"].includes(action)) return json({ error: "invalid_request_id" }, 400);
 
     if (action === "approve") {
-      if (body.bank_statement_checked !== true) return json({ error: "bank_statement_confirmation_required" }, 400);
+      if (body.bank_statement_checked !== true || body.price_checked !== true) return json({ error: "bank_and_price_confirmation_required" }, 400);
       const amount = body.bank_amount_krw;
       const timestamp = textField(body.bank_deposited_at);
       if (!Number.isInteger(amount) || amount <= 0 || !timestamp || !Number.isFinite(Date.parse(timestamp))) {
