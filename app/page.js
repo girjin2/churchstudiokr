@@ -54,6 +54,7 @@ export default function Home() {
             <a className="btn" href="#download">{latest?.download_url?'다운로드':'다운로드 준비 중'}</a>
             <a className="btn" href="#studio-guide">스튜디오 사용법</a>
             <a className="btn" href="/feedback">회원가입 / 로그인</a>
+            <a className="btn" href="/license">내 라이선스 키 확인</a>
             <a className="btn" href="/feedback">사용자 의견</a>
           </div>
         </div>
