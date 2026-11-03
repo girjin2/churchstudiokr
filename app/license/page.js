@@ -93,6 +93,7 @@ export default function MyLicensePage() {
       <a href="/" style={{ ...muted, textDecoration: 'none' }}>← ChurchStudio 홈페이지</a>
       <h1 style={{ margin: '18px 0 6px' }}>내 라이선스</h1>
       <p style={muted}>본인에게 배정된 ChurchStudio 키만 확인할 수 있습니다. 보안을 위해 비밀번호를 다시 입력해야 합니다.</p>
+      <p><a href="/payment" style={{color:'#8fd3ff'}}>입금 확인 신청 · 영구 라이선스 발급 안내</a></p>
 
       {initializing ? <div style={card}>로그인 상태 확인 중...</div> : !user ? (
         <section style={card}>
