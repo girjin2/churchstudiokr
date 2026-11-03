@@ -19,6 +19,8 @@ export default function BankTransferPage(){
   const [password,setPassword]=useState('');
   const [church,setChurch]=useState('');
   const [depositor,setDepositor]=useState('');
+  const [contactName,setContactName]=useState('');
+  const [phone,setPhone]=useState('');
   const [amount,setAmount]=useState('');
   const [date,setDate]=useState('');
   const [requests,setRequests]=useState([]);
@@ -69,7 +71,7 @@ export default function BankTransferPage(){
     if(!Number.isInteger(amountNumber)||amountNumber<1)return setMessage('입금 금액을 정확히 입력해 주세요.');
     setBusy(true);setMessage('');
     try{
-      await invoke({action:'submit',church_name:church.trim(),depositor_name:depositor.trim(),amount_krw:amountNumber,deposited_on:date});
+      await invoke({action:'submit',church_name:church.trim(),contact_name:contactName.trim(),phone:phone.trim(),depositor_name:depositor.trim(),amount_krw:amountNumber,deposited_on:date});
       setMessage('입금 확인 신청이 접수되었습니다. 실제 계좌 거래내역 확인 후 관리자 승인 시 키가 발급됩니다.');
       setAmount('');
       await load();
@@ -111,6 +113,10 @@ export default function BankTransferPage(){
           <form onSubmit={submit} style={{display:'grid',gap:12}}>
             <label htmlFor="pay-church">교회명</label>
             <input id="pay-church" style={input} required minLength={2} maxLength={120} value={church} onChange={e=>setChurch(e.target.value)} placeholder="예: ○○교회"/>
+            <label htmlFor="pay-contact">담당자 이름</label>
+            <input id="pay-contact" style={input} required minLength={2} maxLength={80} value={contactName} onChange={e=>setContactName(e.target.value)} placeholder="연락받을 담당자"/>
+            <label htmlFor="pay-phone">연락처 (선택)</label>
+            <input id="pay-phone" style={input} type="tel" maxLength={24} value={phone} onChange={e=>setPhone(e.target.value)} placeholder="입금 확인 및 고객 지원용"/>
             <label htmlFor="pay-name">실제 입금자명</label>
             <input id="pay-name" style={input} required minLength={2} maxLength={80} value={depositor} onChange={e=>setDepositor(e.target.value)} placeholder="은행 거래내역에 표시되는 이름"/>
             <label htmlFor="pay-amount">입금 금액 (원)</label>
@@ -124,7 +130,9 @@ export default function BankTransferPage(){
           <h2 style={{marginTop:0}}>나의 신청 내역</h2>
           {requests.length===0?<p style={muted}>아직 신청한 내역이 없습니다.</p>:requests.map(r=><article key={r.id} style={{padding:'16px 0',borderTop:'1px solid #384867'}}>
             <b>{statusName(r.status)}</b>
+            <div style={{color:'#aeb9d2',fontSize:13,marginTop:6}}>주문번호: {r.order_number||r.id} · {r.product_name||'ChurchStudio 영구 사용권'}</div>
             <p style={{...muted,margin:'8px 0 0'}}>{r.church_name} · {r.depositor_name} · {Number(r.amount_krw).toLocaleString('ko-KR')}원 · {r.deposited_on}</p>
+            {r.review_note&&r.status==='rejected'&&<p style={{color:'#ffd58a'}}>반려 사유: {r.review_note}</p>}
             {r.status==='approved'&&<p><a href="/license" style={{color:'#8fd3ff'}}>비밀번호 재확인 후 라이선스 키 보기</a></p>}
           </article>)}
           <button type="button" style={{...btn,background:'#263452',color:'#f7f9ff'}} onClick={load}>신청 상태 새로고침</button>
