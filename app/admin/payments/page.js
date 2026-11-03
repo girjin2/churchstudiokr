@@ -12,7 +12,7 @@ const muted={color:'#64748b',fontSize:13};
 const statusLabels={pending:'입금 확인 대기',approved:'승인 완료',rejected:'반려',active:'사용 중',blocked:'사용 중지'};
 const formatMoney=n=>Number(n||0).toLocaleString('ko-KR')+'원';
 const formatTime=t=>t?new Date(t).toLocaleString('ko-KR'):'-';
-const blankEvidence={bank_name:'농협',transaction_reference:'',bank_depositor_name:'',bank_amount_krw:'',bank_deposited_at:'',verification_note:'',bank_statement_checked:false};
+const blankEvidence={bank_name:'농협',transaction_reference:'',bank_depositor_name:'',bank_amount_krw:'',bank_deposited_at:'',verification_note:'',bank_statement_checked:false,price_checked:false};
 const tabs=[['orders','구매·입금'],['members','회원'],['licenses','라이선스'],['audit','처리 이력']];
 const actionLabels={request_submitted:'구매·입금 신청',bank_verified:'은행 입금 증빙 확인',license_issued:'라이선스 발급',request_rejected:'신청 반려',license_blocked:'라이선스 차단',license_reactivated:'라이선스 재활성화'};
 
@@ -79,12 +79,12 @@ export default function CommerceDashboard(){
   }
 
   async function approve(order){
-    if(!proof.bank_statement_checked)return setNotice('실제 은행 거래내역과 대조한 후 확인란을 선택해 주세요.');
+    if(!proof.bank_statement_checked||!proof.price_checked)return setNotice('실제 은행 거래내역과 사전에 안내한 금액을 각각 확인해 주세요.');
     if(!confirm('은행 거래번호 '+proof.transaction_reference+'의 입금을 직접 확인했습니까? 이 거래로 영구 라이선스를 발급합니다.'))return;
     setBusy(true);setNotice('');
     try{
       const response=await invoke({
-        action:'approve',id:order.id,bank_statement_checked:true,
+        action:'approve',id:order.id,bank_statement_checked:true,price_checked:true,
         bank_name:proof.bank_name,transaction_reference:proof.transaction_reference,
         bank_depositor_name:proof.bank_depositor_name,bank_amount_krw:Number(proof.bank_amount_krw),
         bank_deposited_at: new Date(proof.bank_deposited_at+':00+09:00').toISOString(),
@@ -225,7 +225,7 @@ export default function CommerceDashboard(){
         {tab==='orders'&&(
           <section style={card}>
             <h2 style={{marginTop:0}}>구매 신청 · 입금 · 증빙 ({filteredOrders.length}건)</h2>
-            <p style={muted}>회원이 제출한 입금 신고는 결제 증거가 아닙니다. 관리자가 은행 거래내역과 대조한 사실을 기록한 경우에만 키가 발급됩니다.</p>
+            <p style={muted}>회원이 제출한 입금 신고는 결제 증거가 아닙니다. 은행 원장과 사전 안내한 구매 금액을 모두 대조하고 증빙을 기록한 경우에만 키가 발급됩니다.</p>
             {filteredOrders.length===0?<p style={muted}>조회할 구매 신청이 없습니다.</p>:filteredOrders.map(order=>{
               const m=memberMap.get(order.user_id),c=contactMap.get(order.user_id),ev=evidenceMap.get(order.id);
               return <article key={order.id} style={{borderTop:'1px solid #e5e7eb',padding:'16px 0'}}>
@@ -273,7 +273,11 @@ export default function CommerceDashboard(){
                     <input type="checkbox" checked={proof.bank_statement_checked} onChange={e=>setProof({...proof,bank_statement_checked:e.target.checked})}/>
                     실제 은행 거래내역을 열어 입금자·입금액·거래번호·일시를 대조했습니다.
                   </label>
-                  <button style={btn} disabled={busy||!proof.bank_statement_checked}>입금 승인 · 영구 키 발급</button>
+                  <label style={{display:'flex',alignItems:'center',gap:8}}>
+                    <input type="checkbox" checked={proof.price_checked} onChange={e=>setProof({...proof,price_checked:e.target.checked})}/>
+                    사전에 구매자에게 안내한 라이선스 금액과 입금액이 일치함을 확인했습니다.
+                  </label>
+                  <button style={btn} disabled={busy||!proof.bank_statement_checked||!proof.price_checked}>입금 승인 · 영구 키 발급</button>
                 </form>
                 <h3 style={{marginTop:28}}>또는 신청 반려</h3>
                 <textarea style={{...field,minHeight:65}} minLength={5} maxLength={500} placeholder="반려 사유 (회원에게 표시됨)" value={rejectReason} onChange={e=>setRejectReason(e.target.value)}/>
