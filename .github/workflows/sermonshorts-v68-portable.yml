@@ -1,0 +1,173 @@
+name: SermonShortsFinder V6.8 Portable Build
+
+on:
+  push:
+    branches:
+      - sermonshorts-v68-portable-build
+    paths:
+      - '.github/workflows/sermonshorts-v68-portable.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-portable:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - name: Setup Python 3.12 x64
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          architecture: 'x64'
+
+      - name: Download and verify V6.8 source
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $url = 'https://sdmntprjapaneast.oaiusercontent.com/files/00000000-8140-8209-a4dc-f5a27b9f0c62/raw?se=2026-11-17T13%3A05%3A02Z&sp=r&sv=2026-06-06&sr=b&scid=4728dd64-7c18-552a-8678-b0b406cf63e2&skoid=bb372dd6-3b2a-4af2-b355-c26497ba23cd&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-11-17T02%3A32%3A56Z&ske=2026-11-18T02%3A32%3A56Z&sks=b&skv=2026-06-06&sig=HZvSSbfobJOPqx7YRAY2Z0GT3R6XVYiUKpsLC7fU7kQ%3D'
+          curl.exe --fail --location --retry 3 --output source.zip $url
+          $sha = (Get-FileHash source.zip -Algorithm SHA256).Hash.ToLower()
+          if ($sha -ne '4124edba7a97b8142ce6b6e466aaf2a94daa412530b8345de743813cd9373da7') {
+            throw "Source SHA256 mismatch: $sha"
+          }
+          Expand-Archive source.zip -DestinationPath src -Force
+          if (-not (Test-Path 'src\v68src\main.py')) { throw 'V6.8 source root not found' }
+
+      - name: Install main build dependencies
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          python -m venv src\v68src\.venv_main
+          src\v68src\.venv_main\Scripts\python.exe -m pip install --upgrade pip
+          src\v68src\.venv_main\Scripts\python.exe -m pip install -r src\v68src\requirements.txt pyinstaller==6.16.0
+
+      - name: Run critical source tests
+        shell: pwsh
+        working-directory: src/v68src
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $py = '.\.venv_main\Scripts\python.exe'
+          & $py -m compileall -q app
+          & $py test_v68_portable_packs.py
+          & $py test_av_sync_policy.py
+          & $py test_final_coherence.py
+          & $py test_v67_field_validation.py
+          & $py test_v54_learning_provenance.py
+          & $py test_v57_verified_accuracy.py
+
+      - name: Build main portable app
+        shell: pwsh
+        working-directory: src/v68src
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $py = '.\.venv_main\Scripts\python.exe'
+          if (Test-Path dist) { Remove-Item dist -Recurse -Force }
+          & $py -m PyInstaller --noconfirm --clean SermonShortsFinder.spec
+          & $py harmonize_crt.py dist\SermonShortsFinder
+          & $py verify_dist.py dist\SermonShortsFinder
+          if (-not (Test-Path 'dist\SermonShortsFinder\SermonShortsFinder.exe')) { throw 'Main EXE missing' }
+
+      - name: Build SpeakerGuard pack
+        shell: pwsh
+        working-directory: src/v68src
+        run: |
+          $ErrorActionPreference = 'Stop'
+          python -m venv speaker_worker\.venv_speaker
+          $py = '.\speaker_worker\.venv_speaker\Scripts\python.exe'
+          & $py -m pip install --upgrade pip
+          & $py -m pip install sherpa-onnx==1.13.8 soundfile numpy pyinstaller==6.16.0
+          Push-Location speaker_worker
+          & '.\.venv_speaker\Scripts\python.exe' -m PyInstaller --noconfirm --clean --onedir --name SpeakerGuard speaker_guard_cli.py
+          Pop-Location
+          if (-not (Test-Path 'speaker_worker\dist\SpeakerGuard\SpeakerGuard.exe')) { throw 'SpeakerGuard EXE missing' }
+
+      - name: Build VisualAssist pack
+        shell: pwsh
+        working-directory: src/v68src
+        run: |
+          $ErrorActionPreference = 'Stop'
+          python -m venv visual_worker\.venv_visual
+          $py = '.\visual_worker\.venv_visual\Scripts\python.exe'
+          & $py -m pip install --upgrade pip
+          & $py -m pip install -r visual_worker\requirements.txt
+          Push-Location visual_worker
+          & '.\.venv_visual\Scripts\python.exe' -m PyInstaller --noconfirm --clean --onedir --name VisualAssist visual_assist_cli.py
+          Pop-Location
+          if (-not (Test-Path 'visual_worker\dist\VisualAssist\VisualAssist.exe')) { throw 'VisualAssist EXE missing' }
+
+      - name: Assemble integrated portable
+        shell: pwsh
+        working-directory: src/v68src
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $portable = (Resolve-Path 'dist\SermonShortsFinder').Path
+          New-Item -ItemType Directory -Force -Path "$portable\OptionalPacks\SpeakerGuard" | Out-Null
+          New-Item -ItemType Directory -Force -Path "$portable\OptionalPacks\VisualAssist" | Out-Null
+          Copy-Item 'speaker_worker\dist\SpeakerGuard\*' "$portable\OptionalPacks\SpeakerGuard" -Recurse -Force
+          Set-Content -Path "$portable\OptionalPacks\SpeakerGuard\PACK_PROTOCOL.txt" -Value '4' -Encoding ascii -NoNewline
+          Copy-Item 'visual_worker\dist\VisualAssist\*' "$portable\OptionalPacks\VisualAssist" -Recurse -Force
+          Set-Content -Path "$portable\PORTABLE_VERSION.txt" -Value 'SermonShortsFinder V6.8 Portable Integrated' -Encoding utf8
+          if (-not (Test-Path "$portable\OptionalPacks\SpeakerGuard\SpeakerGuard.exe")) { throw 'SpeakerGuard copy failed' }
+          if (-not (Test-Path "$portable\OptionalPacks\VisualAssist\VisualAssist.exe")) { throw 'VisualAssist copy failed' }
+
+      - name: Self-check SpeakerGuard
+        shell: pwsh
+        working-directory: src/v68src
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $exe = (Resolve-Path 'dist\SermonShortsFinder\OptionalPacks\SpeakerGuard\SpeakerGuard.exe').Path
+          & $exe selfcheck --output "$env:TEMP\speaker_selfcheck.json"
+          if ($LASTEXITCODE -ne 0 -or -not (Test-Path "$env:TEMP\speaker_selfcheck.json")) { throw 'SpeakerGuard selfcheck failed' }
+          Get-Content "$env:TEMP\speaker_selfcheck.json"
+
+      - name: Self-check VisualAssist
+        shell: pwsh
+        working-directory: src/v68src
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $exe = (Resolve-Path 'dist\SermonShortsFinder\OptionalPacks\VisualAssist\VisualAssist.exe').Path
+          & $exe selfcheck --output "$env:TEMP\visual_selfcheck.json"
+          if ($LASTEXITCODE -ne 0 -or -not (Test-Path "$env:TEMP\visual_selfcheck.json")) { throw 'VisualAssist selfcheck failed' }
+          Get-Content "$env:TEMP\visual_selfcheck.json"
+
+      - name: Main EXE startup smoke test
+        shell: pwsh
+        working-directory: src/v68src
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $exe = (Resolve-Path 'dist\SermonShortsFinder\SermonShortsFinder.exe').Path
+          $p = Start-Process -FilePath $exe -PassThru
+          Start-Sleep -Seconds 10
+          if ($p.HasExited) { throw "Main EXE exited during smoke test with code $($p.ExitCode)" }
+          Stop-Process -Id $p.Id -Force
+          Start-Sleep -Seconds 2
+
+      - name: Create final portable ZIP and hashes
+        shell: pwsh
+        working-directory: src/v68src
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $zip = Join-Path (Get-Location) 'SermonShortsFinder_V6.8_PORTABLE.zip'
+          if (Test-Path $zip) { Remove-Item $zip -Force }
+          Compress-Archive -Path 'dist\SermonShortsFinder' -DestinationPath $zip -CompressionLevel Optimal
+          $zipHash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
+          $exeHash = (Get-FileHash 'dist\SermonShortsFinder\SermonShortsFinder.exe' -Algorithm SHA256).Hash.ToLower()
+          @(
+            "ZIP_SHA256=$zipHash",
+            "EXE_SHA256=$exeHash",
+            "SOURCE_SHA256=4124edba7a97b8142ce6b6e466aaf2a94daa412530b8345de743813cd9373da7"
+          ) | Set-Content 'SermonShortsFinder_V6.8_PORTABLE_SHA256.txt' -Encoding ascii
+          Get-Content 'SermonShortsFinder_V6.8_PORTABLE_SHA256.txt'
+
+      - name: Upload integrated portable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SermonShortsFinder_V6.8_PORTABLE
+          path: |
+            src/v68src/SermonShortsFinder_V6.8_PORTABLE.zip
+            src/v68src/SermonShortsFinder_V6.8_PORTABLE_SHA256.txt
+          if-no-files-found: error
+          retention-days: 3
+          compression-level: 0
