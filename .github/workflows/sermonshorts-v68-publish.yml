@@ -1,0 +1,49 @@
+name: Publish SermonShortsFinder V6.8 Portable Asset
+
+on:
+  push:
+    branches:
+      - sermonshorts-v68-portable-build
+    paths:
+      - '.github/workflows/sermonshorts-v68-publish.yml'
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download successful Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: SermonShortsFinder_V6.8_PORTABLE
+          path: artifact
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 44090777404
+
+      - name: Verify portable ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f artifact/SermonShortsFinder_V6.8_PORTABLE.zip
+          test -f artifact/SermonShortsFinder_V6.8_PORTABLE_SHA256.txt
+          echo "c10521202f494ef1ce3f097c62af2f725a4f928c2eb8c83778255097c41754e6  artifact/SermonShortsFinder_V6.8_PORTABLE.zip" | sha256sum -c -
+          cat artifact/SermonShortsFinder_V6.8_PORTABLE_SHA256.txt
+
+      - name: Publish direct portable download
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release delete sermonshorts-v6.8-portable --repo "${{ github.repository }}" --cleanup-tag -y || true
+          gh release create sermonshorts-v6.8-portable \
+            artifact/SermonShortsFinder_V6.8_PORTABLE.zip \
+            artifact/SermonShortsFinder_V6.8_PORTABLE_SHA256.txt \
+            --repo "${{ github.repository }}" \
+            --target f298a4322a46bcf698dddecb3f5bf60f8acf747e \
+            --title "SermonShortsFinder V6.8 Portable" \
+            --notes "Windows portable integrated build. Main EXE, SpeakerGuard and VisualAssist were built and self-checked on Windows Server 2025. Main EXE startup smoke test passed." \
+            --prerelease
