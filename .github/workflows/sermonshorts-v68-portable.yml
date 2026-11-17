@@ -26,10 +26,10 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $url = 'https://sdmntprjapaneast.oaiusercontent.com/files/00000000-8140-8209-a4dc-f5a27b9f0c62/raw?se=2026-11-17T13%3A05%3A02Z&sp=r&sv=2026-06-06&sr=b&scid=4728dd64-7c18-552a-8678-b0b406cf63e2&skoid=bb372dd6-3b2a-4af2-b355-c26497ba23cd&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-11-17T02%3A32%3A56Z&ske=2026-11-18T02%3A32%3A56Z&sks=b&skv=2026-06-06&sig=HZvSSbfobJOPqx7YRAY2Z0GT3R6XVYiUKpsLC7fU7kQ%3D'
+          $url = 'https://sdmntprindiasocentral.oaiusercontent.com/files/00000000-c3c4-8211-b0b2-aa6e5e7e4ab4/raw?se=2026-11-17T13%3A09%3A38Z&sp=r&sv=2026-06-06&sr=b&scid=dfa00ecc-91f6-583f-8e53-314ca3b20755&skoid=bb372dd6-3b2a-4af2-b355-c26497ba23cd&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-11-17T02%3A51%3A43Z&ske=2026-11-18T02%3A51%3A43Z&sks=b&skv=2026-06-06&sig=W7wYnnvRwjf54Ub6kM8U4%2BB1gRp7tOJS4m1iHPdQKsw%3D'
           curl.exe --fail --location --retry 3 --output source.zip $url
           $sha = (Get-FileHash source.zip -Algorithm SHA256).Hash.ToLower()
-          if ($sha -ne '4124edba7a97b8142ce6b6e466aaf2a94daa412530b8345de743813cd9373da7') {
+          if ($sha -ne '34e527f9d5b53eb946b1e7e6447feb1cd740385397ce8204e947f03cb097765e') {
             throw "Source SHA256 mismatch: $sha"
           }
           Expand-Archive source.zip -DestinationPath src -Force
@@ -157,7 +157,7 @@ jobs:
           @(
             "ZIP_SHA256=$zipHash",
             "EXE_SHA256=$exeHash",
-            "SOURCE_SHA256=4124edba7a97b8142ce6b6e466aaf2a94daa412530b8345de743813cd9373da7"
+            "SOURCE_SHA256=34e527f9d5b53eb946b1e7e6447feb1cd740385397ce8204e947f03cb097765e"
           ) | Set-Content 'SermonShortsFinder_V6.8_PORTABLE_SHA256.txt' -Encoding ascii
           Get-Content 'SermonShortsFinder_V6.8_PORTABLE_SHA256.txt'
 
