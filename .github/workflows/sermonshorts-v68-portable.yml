@@ -26,7 +26,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $url = 'https://sdmntprindiasocentral.oaiusercontent.com/files/00000000-c3c4-8211-b0b2-aa6e5e7e4ab4/raw?se=2026-11-17T13%3A09%3A38Z&sp=r&sv=2026-06-06&sr=b&scid=dfa00ecc-91f6-583f-8e53-314ca3b20755&skoid=bb372dd6-3b2a-4af2-b355-c26497ba23cd&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-11-17T02%3A51%3A43Z&ske=2026-11-18T02%3A51%3A43Z&sks=b&skv=2026-06-06&sig=W7wYnnvRwjf54Ub6kM8U4%2BB1gRp7tOJS4m1iHPdQKsw%3D'
+          $url = 'https://sdmntprindiasocentral.oaiusercontent.com/files/00000000-219c-8211-8879-5b4d49068b8e/raw?se=2026-11-17T13%3A13%3A14Z&sp=r&sv=2026-06-06&sr=b&scid=9114bf6a-be16-5573-a2aa-11214b38535f&skoid=bb372dd6-3b2a-4af2-b355-c26497ba23cd&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-11-17T02%3A56%3A52Z&ske=2026-11-18T02%3A56%3A52Z&sks=b&skv=2026-06-06&sig=puUu7h83xvwiweSnGMqsAU5jQo%2BaRjybMaOfJqJ6ptI%3D'
           curl.exe --fail --location --retry 3 --output source.zip $url
           $sha = (Get-FileHash source.zip -Algorithm SHA256).Hash.ToLower()
           if ($sha -ne '34e527f9d5b53eb946b1e7e6447feb1cd740385397ce8204e947f03cb097765e') {
@@ -93,7 +93,7 @@ jobs:
           & $py -m pip install --upgrade pip
           & $py -m pip install -r visual_worker\requirements.txt
           Push-Location visual_worker
-          & '.\.venv_visual\Scripts\python.exe' -m PyInstaller --noconfirm --clean --onedir --name VisualAssist visual_assist_cli.py
+          & '.\.venv_visual\Scripts\python.exe' -m PyInstaller --noconfirm --clean --onedir --name VisualAssist --collect-all mediapipe --hidden-import mediapipe.tasks.c visual_assist_cli.py
           Pop-Location
           if (-not (Test-Path 'visual_worker\dist\VisualAssist\VisualAssist.exe')) { throw 'VisualAssist EXE missing' }
 
